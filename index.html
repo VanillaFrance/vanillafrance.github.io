@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driven Pendulum Simulation + Phase Diagram</title>
+    <title>Driven Pendulum Simulation + Continuous Phase Diagram</title>
     <style>
         body {
             font-family: sans-serif;
@@ -181,6 +181,9 @@
             omega: 0,    // Angular velocity (rad/s)
             t: 0         // Time (s)
         };
+        
+        // Store previous phase point for continuous line drawing
+        let lastPhasePoint = null;
 
         // --- Parameters ---
         let params = {
@@ -284,23 +287,18 @@
             simCtx.fillText(`t: ${state.t.toFixed(2)}s`, 10, 20);
         }
 
-        // --- Drawing: Phase Diagram ---
+        // --- Drawing: Phase Diagram (Continuous) ---
         function drawPhase() {
-            // "Fade" effect: draw a semi-transparent white rect over the whole canvas
-            // instead of clearing it. This leaves trails.
-            phaseCtx.fillStyle = 'rgba(250, 250, 250, 0.05)';
+            // Slower fade effect for continuous trails (0.02 opacity)
+            phaseCtx.fillStyle = 'rgba(250, 250, 250, 0.02)';
             phaseCtx.fillRect(0, 0, phaseCanvas.width, phaseCanvas.height);
 
-            // Draw Axes (faint)
+            // Draw Axes (faint layer on top to keep them visible)
             phaseCtx.beginPath();
-            phaseCtx.strokeStyle = '#ddd';
+            phaseCtx.strokeStyle = 'rgba(220, 220, 220, 0.1)';
             phaseCtx.lineWidth = 1;
-            // X-axis (Theta)
-            phaseCtx.moveTo(0, phaseOriginY);
-            phaseCtx.lineTo(phaseCanvas.width, phaseOriginY);
-            // Y-axis (Omega)
-            phaseCtx.moveTo(phaseOriginX, 0);
-            phaseCtx.lineTo(phaseOriginX, phaseCanvas.height);
+            phaseCtx.moveTo(0, phaseOriginY); phaseCtx.lineTo(phaseCanvas.width, phaseOriginY); // X-axis
+            phaseCtx.moveTo(phaseOriginX, 0); phaseCtx.lineTo(phaseOriginX, phaseCanvas.height); // Y-axis
             phaseCtx.stroke();
 
             // Normalize Theta to [-PI, PI] for the plot
@@ -312,13 +310,29 @@
             const px = phaseOriginX + wrappedTheta * phaseScaleX; // X is Theta
             const py = phaseOriginY - state.omega * phaseScaleY;   // Y is Omega (up is positive)
 
-            // Draw current state point
-            phaseCtx.beginPath();
-            phaseCtx.arc(px, py, 1.5, 0, 2 * Math.PI);
-            phaseCtx.fillStyle = '#007bff';
-            phaseCtx.fill();
+            // Draw continuous line if we have a previous point
+            if (lastPhasePoint) {
+                // Calculate distance squared to detect wrapping jumps
+                const dx = px - lastPhasePoint.x;
+                const dy = py - lastPhasePoint.y;
+                const distSq = dx*dx + dy*dy;
+
+                // Only draw line if distance is reasonable (e.g., not wrapping across screen)
+                // Threshold is heuristic: approx 1/4 canvas width squared
+                if (distSq < (phaseCanvas.width * phaseCanvas.width / 16)) {
+                    phaseCtx.beginPath();
+                    phaseCtx.moveTo(lastPhasePoint.x, lastPhasePoint.y);
+                    phaseCtx.lineTo(px, py);
+                    phaseCtx.strokeStyle = '#007bff';
+                    phaseCtx.lineWidth = 1.5; // Slightly thicker for visibility
+                    phaseCtx.stroke();
+                }
+            }
+
+            // Update previous point for next frame
+            lastPhasePoint = { x: px, y: py };
             
-            // Labels
+            // Labels (redraw to keep on top)
             phaseCtx.fillStyle = '#888';
             phaseCtx.font = '10px sans-serif';
             phaseCtx.fillText("+π", phaseCanvas.width - 20, phaseOriginY + 12);
@@ -345,10 +359,13 @@
         playPauseBtn.addEventListener('click', () => {
             isRunning = !isRunning;
             playPauseBtn.textContent = isRunning ? 'Pause' : 'Resume';
+            // Reset last point on pause/resume to prevent jumps
+            lastPhasePoint = null; 
         });
 
         clearPhaseBtn.addEventListener('click', () => {
             phaseCtx.clearRect(0, 0, phaseCanvas.width, phaseCanvas.height);
+            lastPhasePoint = null; // Reset trail
         });
 
         function updateParam(id, valDisplayId) {
@@ -357,8 +374,9 @@
             slider.addEventListener('input', () => {
                 params[id] = parseFloat(slider.value);
                 display.textContent = params[id].toFixed(2) + (id.includes('w') ? ' rad/s' : '');
-                // Clear phase diagram on param change as trajectory changes
+                // Clear phase diagram and reset trail on param change
                 phaseCtx.clearRect(0, 0, phaseCanvas.width, phaseCanvas.height);
+                lastPhasePoint = null;
             });
         }
 
@@ -380,6 +398,7 @@
             document.getElementById('val-a').textContent = params.a.toFixed(2);
 
             phaseCtx.clearRect(0, 0, phaseCanvas.width, phaseCanvas.height);
+            lastPhasePoint = null; // Reset trail
         }
 
         // --- Presets ---
