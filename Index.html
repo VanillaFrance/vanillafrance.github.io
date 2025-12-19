@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driven Pendulum Simulation</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 300px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type=range] { width: 100%; }
+        .value-display {
+            font-size: 0.9em;
+            color: #777;
+            text-align: right;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex: 1;
+        }
+        button:hover { background-color: #0056b3; }
+        button.reset { background-color: #6c757d; }
+        button.reset:hover { background-color: #545b62; }
+        .scenario-btn { background-color: #28a745; }
+        .scenario-btn:hover { background-color: #1e7e34; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Driven Pendulum Simulation</h1>
+
+    <div class="container">
+        <canvas id="simCanvas" width="600" height="500"></canvas>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="w0">Natural Frequency ($\omega_0$)</label>
+                <input type="range" id="w0" min="1" max="10" step="0.1" value="6.28">
+                <div class="value-display" id="val-w0">6.28 rad/s</div>
+            </div>
+            <div class="control-group">
+                <label for="w">Drive Frequency ($\omega$)</label>
+                <input type="range" id="w" min="0" max="250" step="1" value="6.28">
+                <div class="value-display" id="val-w">6.28 rad/s</div>
+            </div>
+            <div class="control-group">
+                <label for="a">Normalized Amplitude ($a = A/l$)</label>
+                <input type="range" id="a" min="0" max="1.5" step="0.01" value="0.1">
+                <div class="value-display" id="val-a">0.1</div>
+            </div>
+            <div class="control-group" style="border-top: 1px solid #eee; padding-top: 10px;">
+                 <label>Scenarios:</label>
+                 <div class="buttons">
+                    <button class="scenario-btn" onclick="setResonance()">Resonance</button>
+                    <button class="scenario-btn" onclick="setKapitza()">Kapitza (Inverted)</button>
+                    <button class="scenario-btn" onclick="setChaos()">Chaos Region</button>
+                 </div>
+            </div>
+             <div class="buttons" style="margin-top: auto;">
+                <button id="playPauseBtn">Pause</button>
+                <button class="reset" onclick="resetSim(0.1)">Reset (Bottom)</button>
+                <button class="reset" onclick="resetSim(Math.PI - 0.05)">Reset (Top)</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Physics State ---
+        let state = {
+            theta: 0.1,  // Angle (radians)
+            omega: 0,    // Angular velocity (rad/s)
+            t: 0         // Time (s)
+        };
+
+        // --- Parameters ---
+        let params = {
+            w0: 6.28,    // Natural frequency (approx 2*pi)
+            w: 6.28,     // Drive frequency
+            a: 0.1,      // Normalized drive amplitude
+            dt: 0.005    // Simulation time step
+        };
+
+        // --- Visualization Scale ---
+        const L_pix = 180; // Length of pendulum in pixels
+        const originX = canvas.width / 2;
+        const originY = canvas.height / 2;
+
+        let isRunning = true;
+
+        // --- The Differential Equation ---
+        // Returns derivatives [d(theta)/dt, d(omega)/dt]
+        function getDerivatives(curState, t) {
+            const theta = curState.theta;
+            const omega = curState.omega;
+            
+            const theta_dot = omega;
+            // The core equation derived in Task 2:
+            // theta_doubledot = sin(theta) * (a * w^2 * cos(w*t) - w0^2)
+            const omega_dot = Math.sin(theta) * (params.a * params.w * params.w * Math.cos(params.w * t) - params.w0 * params.w0);
+            
+            return { theta_dot, omega_dot };
+        }
+
+        // --- Runge-Kutta 4 Integrator ---
+        function rk4Step() {
+            let s1 = state;
+            let k1 = getDerivatives(s1, state.t);
+
+            let s2 = { 
+                theta: state.theta + k1.theta_dot * params.dt / 2, 
+                omega: state.omega + k1.omega_dot * params.dt / 2 
+            };
+            let k2 = getDerivatives(s2, state.t + params.dt / 2);
+
+            let s3 = { 
+                theta: state.theta + k2.theta_dot * params.dt / 2, 
+                omega: state.omega + k2.omega_dot * params.dt / 2 
+            };
+            let k3 = getDerivatives(s3, state.t + params.dt / 2);
+
+            let s4 = { 
+                theta: state.theta + k3.theta_dot * params.dt, 
+                omega: state.omega + k3.omega_dot * params.dt 
+            };
+            let k4 = getDerivatives(s4, state.t + params.dt);
+
+            // Update state
+            state.theta += (params.dt / 6) * (k1.theta_dot + 2*k2.theta_dot + 2*k3.theta_dot + k4.theta_dot);
+            state.omega += (params.dt / 6) * (k1.omega_dot + 2*k2.omega_dot + 2*k3.omega_dot + k4.omega_dot);
+            state.t += params.dt;
+        }
+
+        // --- Rendering ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Calculate positions
+            // Physical drive amplitude A = a * L. In pixels: A_pix = a * L_pix
+            const A_pix = params.a * L_pix;
+            // Support point moves vertically: y_s(t) = A * cos(w*t)
+            // Note: Canvas Y increases downwards, physics Y increases upwards.
+            const supportY = originY - A_pix * Math.cos(params.w * state.t);
+            const supportX = originX;
+
+            // Bob position relative to support
+            const bobX = supportX + L_pix * Math.sin(state.theta);
+            const bobY = supportY + L_pix * Math.cos(state.theta);
+
+            // 2. Draw Equilibrium Line / Axis
+            ctx.beginPath();
+            ctx.moveTo(originX, originY - L_pix - 50);
+            ctx.lineTo(originX, originY + L_pix + 50);
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 3. Draw String
+            ctx.beginPath();
+            ctx.moveTo(supportX, supportY);
+            ctx.lineTo(bobX, bobY);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 4. Draw Support Point (Driven)
+            ctx.beginPath();
+            ctx.arc(supportX, supportY, 8, 0, 2 * Math.PI);
+            ctx.fillStyle = '#d9534f'; // Red support
+            ctx.fill();
+
+            // 5. Draw Bob
+            ctx.beginPath();
+            ctx.arc(bobX, bobY, 20, 0, 2 * Math.PI);
+            // Color changes based on speed
+            const speed = Math.abs(state.omega);
+            const blueComponent = Math.max(255 - speed*10, 50);
+            ctx.fillStyle = `rgb(50, 50, ${blueComponent})`; 
+            ctx.fill();
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 6. Info overlay
+            ctx.fillStyle = '#555';
+            ctx.font = '14px monospace';
+            ctx.fillText(`Time: ${state.t.toFixed(2)}s`, 10, 20);
+            ctx.fillText(`Theta: ${(state.theta/Math.PI).toFixed(2)}\u03C0`, 10, 40);
+        }
+
+        // --- Main Loop ---
+        function loop() {
+            if (isRunning) {
+                // Perform multiple physics steps per frame for stability and speed
+                // 10 steps of 0.005s = 0.05s physics time per visual frame at 60fps
+                for (let i = 0; i < 10; i++) {
+                    rk4Step();
+                }
+            }
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // --- UI and Controls ---
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        playPauseBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            playPauseBtn.textContent = isRunning ? 'Pause' : 'Resume';
+        });
+
+        function updateParam(id, valDisplayId) {
+            const slider = document.getElementById(id);
+            const display = document.getElementById(valDisplayId);
+            slider.addEventListener('input', () => {
+                params[id] = parseFloat(slider.value);
+                display.textContent = params[id].toFixed(2) + (id.includes('w') ? ' rad/s' : '');
+            });
+        }
+
+        updateParam('w0', 'val-w0');
+        updateParam('w', 'val-w');
+        updateParam('a', 'val-a');
+
+        function resetSim(initialTheta) {
+            state.theta = initialTheta;
+            state.omega = 0;
+            state.t = 0;
+            // Ensure sliders match current params if they were changed programmatically
+            document.getElementById('w0').value = params.w0; document.getElementById('val-w0').textContent = params.w0.toFixed(2) + ' rad/s';
+            document.getElementById('w').value = params.w; document.getElementById('val-w').textContent = params.w.toFixed(2) + ' rad/s';
+            document.getElementById('a').value = params.a; document.getElementById('val-a').textContent = params.a.toFixed(2);
+        }
+
+        // Scenarios
+        function setResonance() {
+            params.w0 = 6.28;
+            params.w = 6.28;
+            params.a = 0.1;
+            resetSim(0.1);
+        }
+
+        function setKapitza() {
+            // High frequency stabilization of inverted position
+            params.w0 = 6.28;
+            params.w = 220; // High frequency
+            params.a = 0.05; // Small amplitude
+            resetSim(Math.PI - 0.05); // Start near inverted
+        }
+
+        function setChaos() {
+            // High amplitude drive leading to chaos
+            params.w0 = 6.28;
+            params.w = 6.28;
+            params.a = 1.2; // High amplitude (> 1.0 usually chaotic)
+            resetSim(0.1);
+        }
+
+        // Start simulation
+        loop();
+
+    </script>
+</body>
+</html>
