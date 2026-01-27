@@ -2,415 +2,210 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Robot DH Visualization with XYZ Labels</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOSUM Interactive Simulation - Pro Version</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #222; }
-        #container { width: 100vw; height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; color: #1a1a1b; }
+        .main-container { display: flex; gap: 20px; max-width: 1400px; margin: auto; }
+        .left-panel { flex: 3; }
+        .right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; }
         
-        /* UI Panel Styling */
-        #ui-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 320px;
-            color: white;
-            background: rgba(40, 40, 40, 0.9);
-            backdrop-filter: blur(8px);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 10;
-        }
-        h2 { margin-top: 0; font-size: 18px; border-bottom: 2px solid #00d2ff; padding-bottom: 10px; color: #fff; }
-        .control-group { margin-bottom: 18px; }
-        label { display: block; font-size: 14px; margin-bottom: 8px; color: #ddd; font-weight: 600; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #00d2ff; }
-        .value-display { float: right; font-family: monospace; color: #00d2ff; }
+        /* 调整网格以容纳更多控件 */
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; }
+        label { font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #444; }
         
-        .btn-anim {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        .btn-anim:hover { background-color: #0056b3; }
+        #plot { height: 600px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        #dataWindow { flex-grow: 1; font-family: 'Courier New', Courier, monospace; font-size: 12px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fafafa; border-radius: 4px; max-height: 500px; }
+        .data-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee; }
+        .current-row { background: #fff3cd; font-weight: bold; }
 
-        /* General Labels */
-        .label {
-            position: absolute;
-            font-family: 'Segoe UI', sans-serif;
-            font-weight: bold;
-            pointer-events: none;
-            user-select: none;
-            white-space: nowrap;
-            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000;
-        }
-        
-        /* Main Frame Labels (Z0, Z1...) */
-        .label-main {
-            color: #ffffff;
-            font-size: 16px; 
-            z-index: 5;
-        }
-
-        /* Alpha Labels (Yellow) */
-        .label-alpha { 
-            color: #ffff00; 
-            font-style: italic; 
-            font-size: 13px; 
-            z-index: 4;
-        }
-        
-        /* Axis Tip Labels (Small X, Y, Z) */
-        .label-axis {
-            font-size: 12px;
-            font-family: monospace;
-            z-index: 3;
-            opacity: 0.9;
-        }
-
-        .legend-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 13px; color: #ccc; }
-        .color-box { width: 12px; height: 12px; margin-right: 8px; border-radius: 2px; }
+        .greek-math { font-family: "Times New Roman", Times, serif; font-style: italic; font-size: 1.1em; }
+        .footer-note { margin-top: 20px; padding: 15px; background: #e9ecef; border-left: 5px solid #007bff; font-size: 0.95em; line-height: 1.6; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-<div id="container"></div>
-
-<div id="ui-panel">
-    <h2>DH Visualization + XYZ</h2>
+    <h2 style="text-align: center;">MOSUM Change-Point Detection Simulator</h2>
     
-    <div class="control-group">
-        <label>θ₁ (Base Rotation) <span id="val-t1" class="value-display">0°</span></label>
-        <input type="range" id="slider-t1" min="-180" max="180" value="0" step="1">
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Bandwidth (<span class="greek-math">G</span>): <span id="gVal">40</span></label>
+                    <input type="range" id="paramG" min="10" max="100" value="40">
+                </div>
+                <div class="control-group">
+                    <label>Noise Level (<span class="greek-math">&sigma;</span>): <span id="noiseVal">1.0</span></label>
+                    <input type="range" id="paramNoise" min="0.1" max="3" step="0.1" value="1.0">
+                </div>
+                <div class="control-group">
+                    <label>Threshold (<span class="greek-math">&tau;</span>): <span id="threshVal">3.5</span></label>
+                    <input type="range" id="paramThresh" min="1" max="10" step="0.1" value="3.5">
+                </div>
+                <div class="control-group">
+                    <label><span class="greek-math">&eta;</span>-Criterion: <span id="etaVal">0.4</span></label>
+                    <input type="range" id="paramEta" min="0" max="1" step="0.1" value="0.4">
+                </div>
+                <div class="control-group">
+                    <label><span class="greek-math">&epsilon;</span>-Criterion: <span id="epsVal">0.2</span></label>
+                    <input type="range" id="paramEps" min="0" max="1" step="0.1" value="0.2">
+                </div>
+                <div class="control-group">
+                    <label>Speed: <span id="speedVal">1x</span></label>
+                    <input type="range" id="paramSpeed" min="1" max="5" value="1">
+                </div>
+                <button onclick="resetAnimation()" style="grid-column: span 3; padding: 12px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold;">Reset Simulation Data</button>
+            </div>
+
+            <div id="plot"></div>
+        </div>
+
+        <div class="right-panel">
+            <label>Raw Data Stream (<span class="greek-math">X<sub>t</sub></span>)</label>
+            <div id="dataWindow"></div>
+            <p style="font-size: 11px; color: #777; margin-top: 10px;">Window lists: Index | Value</p>
+        </div>
     </div>
 
-    <div class="control-group">
-        <label>θ₂ (Arm Pitch) <span id="val-t2" class="value-display">0°</span></label>
-        <input type="range" id="slider-t2" min="-90" max="90" value="0" step="1">
-    </div>
+<style>
+    .footer-note {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-left: 4px solid #005a9c;
+        font-size: 14px;
+    }
 
-    <div class="control-group">
-        <label>d₃ (Arm Extension) <span id="val-d3" class="value-display">1.00</span></label>
-        <input type="range" id="slider-d3" min="0" max="2.0" value="1.0" step="0.05">
-    </div>
+    .greek-math {
+        font-family: "Cambria Math", "Times New Roman", serif;
+        font-style: italic;
+        font-weight: bold;
+        color: #d32f2f; /* Distinct color for variables */
+    }
 
-    <button id="btn-animate" class="btn-anim">Auto Animation: OFF</button>
+    .concept-highlight {
+        color: #005a9c;
+        font-weight: 500;
+    }
+</style>
+
+<div class="footer-note">
+    <span class="concept-highlight"><strong>Mathematical Logic:</strong></span> 
+    The detector <span class="greek-math">|T<sub>G</sub>(k)|</span> is calculated by the normalized difference of the right and left window means. 
     
-    <div style="margin-top:20px; border-top: 1px solid #555; padding-top: 10px;">
-        <div class="legend-item"><div class="color-box" style="background:#ff3333"></div>X Axis</div>
-        <div class="legend-item"><div class="color-box" style="background:#33cc33"></div>Y Axis</div>
-        <div class="legend-item"><div class="color-box" style="background:#5555ff"></div>Z Axis</div>
-        <div class="legend-item"><div class="color-box" style="background:#ffff00"></div>Twist (α)</div>
-    </div>
+    <span class="concept-highlight">The stability</span> is governed by the 
+    <span class="greek-math">&eta;</span>-criterion (local dominance to avoid redundant detections) and 
+    <span class="greek-math">&epsilon;</span>-criterion (minimum duration to filter short noise spikes), 
+    
+    <span class="concept-highlight">ensuring</span> that 
+    <span class="greek-math">&sigma;</span> fluctuations do not trigger false positives.
 </div>
 
-<script>
-    // --- 1. Scene Setup ---
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2a2a2a);
-    
-    const gridHelper = new THREE.GridHelper(20, 20, 0x555555, 0x333333);
-    scene.add(gridHelper);
-    
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(12, 10, 15); 
-    camera.lookAt(0, 3, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    document.getElementById('container').appendChild(renderer.domElement);
+    <script>
+        const N = 500;
+        const jumpLoc = 250;
+        let currentIndex = 40;
+        let dataX = [];
+        let mosumCurve = Array(N).fill(null);
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    const ambientLight = new THREE.AmbientLight(0x888888);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(5, 15, 10);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
-
-    // --- 2. Helper Functions ---
-
-    const labels = [];
-    
-    /**
-     * Creates a text label overlay
-     * @param {string} text - The content
-     * @param {string} type - 'main' (white/large), 'alpha' (yellow), 'axis' (small colored)
-     * @param {string} color - CSS color string (only for 'axis' type usually)
-     */
-    function createLabel(text, type='main', color='#ffffff') {
-        const div = document.createElement('div');
-        
-        if (type === 'alpha') {
-            div.className = 'label label-alpha';
-        } else if (type === 'axis') {
-            div.className = 'label label-axis';
-            div.style.color = color;
-        } else {
-            div.className = 'label label-main';
-        }
-        
-        div.innerHTML = text; 
-        document.body.appendChild(div);
-        
-        const labelObj = { div: div, obj: null, offset: new THREE.Vector3(0,0,0) };
-        labels.push(labelObj);
-        return labelObj;
-    }
-
-    // Updated createFrame to include X, Y, Z labels automatically
-    function createFrame(scale=1.0) {
-        const group = new THREE.Group();
-        
-        // --- X Axis (Red) ---
-        group.add(new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), scale, 0xff3333, 0.2*scale, 0.15*scale));
-        const lblX = createLabel("x", 'axis', '#ff5555');
-        lblX.obj = group;
-        lblX.offset.set(scale + 0.15, 0, 0);
-
-        // --- Y Axis (Green) ---
-        group.add(new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), scale, 0x33cc33, 0.2*scale, 0.15*scale));
-        const lblY = createLabel("y", 'axis', '#55ff55');
-        lblY.obj = group;
-        lblY.offset.set(0, scale + 0.15, 0);
-
-        // --- Z Axis (Blue) ---
-        group.add(new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), scale, 0x5555ff, 0.2*scale, 0.15*scale));
-        const lblZ = createLabel("z", 'axis', '#8888ff');
-        lblZ.obj = group;
-        lblZ.offset.set(0, 0, scale + 0.15);
-
-        return group;
-    }
-
-    function createTwistArc(radius=1.0) {
-        const geometry = new THREE.TorusGeometry(radius, 0.03, 8, 40, Math.PI/2);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const mesh = new THREE.Mesh(geometry, material);
-        const coneGeo = new THREE.ConeGeometry(0.08, 0.2, 16);
-        const coneMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const cone = new THREE.Mesh(coneGeo, coneMat);
-        cone.position.set(-radius, 0, 0); 
-        cone.rotation.z = -Math.PI/2 - Math.PI; 
-        
-        const container = new THREE.Group();
-        mesh.rotation.z = Math.PI/2; 
-        mesh.position.set(0,0,0);
-        cone.position.set(radius, 0, 0);
-        cone.rotation.z = -Math.PI/2;
-        container.add(mesh);
-        container.add(cone);
-        return container;
-    }
-
-    // --- 3. Robot Construction ---
-
-    const L1 = 2.0; 
-    const L2 = 1.0; 
-    const L3 = 1.0; 
-
-    const robotRoot = new THREE.Group();
-    scene.add(robotRoot);
-
-    // === FRAME 0: BASE ===
-    const baseGroup = new THREE.Group();
-    robotRoot.add(baseGroup);
-
-    // Visual Base
-    const baseMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.0, 0.2, 32), new THREE.MeshPhongMaterial({color:0x333333}));
-    baseMesh.position.y = 0.1;
-    baseGroup.add(baseMesh);
-
-    // FRAME 0
-    // Rotate standard frame (-90 around X) so its Z points Up
-    const frame0 = createFrame(1.5);
-    frame0.rotation.x = -Math.PI/2; 
-    baseGroup.add(frame0);
-    
-    // Add Main Label for Frame 0
-    const lblF0 = createLabel("Frame 0");
-    lblF0.obj = frame0;
-    lblF0.offset.set(0.5, 0.5, 0.5); 
-
-    // === LINK 1 (Static) ===
-    const link1Mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, L1, 16), new THREE.MeshPhongMaterial({color:0xffaa00}));
-    link1Mesh.position.y = L1/2; 
-    baseGroup.add(link1Mesh);
-
-    // === JOINT 1 NODE ===
-    const joint1Node = new THREE.Group();
-    joint1Node.position.y = L1; 
-    baseGroup.add(joint1Node);
-
-    // FRAME 1
-    // Z1 is VERTICAL (Parallel to Z0)
-    const frame1 = createFrame(1.3);
-    frame1.rotation.x = -Math.PI/2; 
-    joint1Node.add(frame1);
-
-    const lblF1 = createLabel("Frame 1");
-    lblF1.obj = frame1;
-    lblF1.offset.set(0.5, 0.5, 0.5);
-
-    // === LINK 2 ===
-    const link2Mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, L2, 16), new THREE.MeshPhongMaterial({color:0x007bff}));
-    link2Mesh.position.y = L2/2; 
-    joint1Node.add(link2Mesh);
-
-    // === FRAME 2 (Twist Location) ===
-    const twistNode = new THREE.Group();
-    twistNode.position.y = L2;
-    joint1Node.add(twistNode);
-
-    // VISUAL ARC 1 (alpha = 90)
-    const arc1 = createTwistArc(0.8);
-    twistNode.add(arc1);
-    const lblAlpha1 = createLabel("α₁=90°", 'alpha');
-    lblAlpha1.obj = twistNode;
-    lblAlpha1.offset.set(0.6, 0.6, 0);
-
-    // FRAME 2
-    // Z2 is Horizontal. Rotate standard frame so Z points along X.
-    const frame2 = createFrame(1.3);
-    frame2.rotation.y = Math.PI/2; 
-    twistNode.add(frame2);
-
-    const lblF2 = createLabel("Frame 2");
-    lblF2.obj = frame2;
-    lblF2.offset.set(0.5, 0.5, 0.5);
-
-    // === JOINT 2 NODE ===
-    const joint2Node = new THREE.Group();
-    frame2.add(joint2Node); 
-
-    // === LINK 3 (The Arm) ===
-    const armHousing = new THREE.Group();
-    joint2Node.add(armHousing);
-
-    const housingMesh = new THREE.Mesh(new THREE.BoxGeometry(L3, 0.3, 0.3), new THREE.MeshPhongMaterial({color:0xff3333}));
-    housingMesh.position.x = L3/2; 
-    armHousing.add(housingMesh);
-
-    // === PRISMATIC JOINT (d3) ===
-    const sliderGroup = new THREE.Group();
-    armHousing.add(sliderGroup);
-
-    const sliderMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.25, 0.25), new THREE.MeshPhongMaterial({color:0xdddddd}));
-    sliderGroup.add(sliderMesh);
-
-    // === FRAME 3 (End Effector) ===
-    // Twist Z -90 around X.
-    const frame3 = createFrame(1.0);
-    frame3.rotation.x = -Math.PI/2; 
-    sliderGroup.add(frame3);
-
-    const lblF3 = createLabel("Frame 3");
-    lblF3.obj = frame3;
-    lblF3.offset.set(0.5, 0.5, 0.5);
-
-    // VISUAL ARC 2 (alpha = -90)
-    const arc2 = createTwistArc(0.6);
-    arc2.rotation.y = Math.PI/2; 
-    arc2.rotation.x = Math.PI/2;
-    sliderGroup.add(arc2);
-    
-    const lblAlpha2 = createLabel("α₂=-90°", 'alpha');
-    lblAlpha2.obj = sliderGroup;
-    lblAlpha2.offset.set(0.5, -0.5, 0);
-
-
-    // --- 4. Animation Loop ---
-
-    const state = { t1: 0, t2: 0, d3: 1.0, auto: false, time: 0 };
-
-    function updatePhysics() {
-        // Joint 1 Rotation
-        joint1Node.rotation.y = THREE.MathUtils.degToRad(state.t1);
-
-        // Joint 2 Rotation
-        joint2Node.rotation.z = THREE.MathUtils.degToRad(state.t2);
-
-        // Joint 3 Extension
-        sliderGroup.position.x = (L3/2) + parseFloat(state.d3); 
-        
-        // Update Labels
-        labels.forEach(item => {
-            const pos = new THREE.Vector3();
-            // Important: We need to handle the nested transforms correctly
-            item.obj.getWorldPosition(pos);
-            
-            // Get local offset rotated into world space
-            const quat = new THREE.Quaternion();
-            item.obj.getWorldQuaternion(quat);
-            const worldOffset = item.offset.clone().applyQuaternion(quat);
-            pos.add(worldOffset);
-            
-            pos.project(camera);
-            
-            const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
-            const y = (-(pos.y * 0.5) + 0.5) * window.innerHeight;
-            
-            if (pos.z < 1) {
-                item.div.style.left = x + 'px';
-                item.div.style.top = y + 'px';
-                item.div.style.display = 'block';
-            } else {
-                item.div.style.display = 'none';
+        function generateData() {
+            const noise = parseFloat(document.getElementById('paramNoise').value);
+            dataX = [];
+            for (let i = 0; i < N; i++) {
+                const mu = (i < jumpLoc) ? 0 : 1; // 增加跳跃幅度以使波峰更明显
+                const u1 = Math.random();
+                const u2 = Math.random();
+                const randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+                dataX.push(parseFloat((mu + randStdNormal * noise).toFixed(3)));
             }
-        });
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        controls.update();
-
-        if (state.auto) {
-            state.time += 0.02;
-            state.t1 = Math.sin(state.time * 0.5) * 45;
-            state.t2 = Math.sin(state.time * 0.8) * 30;
-            state.d3 = 1.0 + Math.sin(state.time * 1.0) * 0.5;
-            
-            document.getElementById('slider-t1').value = state.t1;
-            document.getElementById('slider-t2').value = state.t2;
-            document.getElementById('slider-d3').value = state.d3;
+            updateDataWindow();
         }
-        
-        document.getElementById('val-t1').innerText = parseFloat(state.t1).toFixed(0) + "°";
-        document.getElementById('val-t2').innerText = parseFloat(state.t2).toFixed(0) + "°";
-        document.getElementById('val-d3').innerText = parseFloat(state.d3).toFixed(2);
 
-        updatePhysics();
-        renderer.render(scene, camera);
-    }
+        function updateDataWindow() {
+            const container = document.getElementById('dataWindow');
+            container.innerHTML = dataX.map((val, i) => `
+                <div class="data-row" id="row-${i}">
+                    <span>t = ${i}</span>
+                    <span>${val}</span>
+                </div>
+            `).join('');
+        }
 
-    document.getElementById('slider-t1').addEventListener('input', (e) => { state.t1 = e.target.value; state.auto=false; });
-    document.getElementById('slider-t2').addEventListener('input', (e) => { state.t2 = e.target.value; state.auto=false; });
-    document.getElementById('slider-d3').addEventListener('input', (e) => { state.d3 = e.target.value; state.auto=false; });
-    document.getElementById('btn-animate').addEventListener('click', (e) => { 
-        state.auto = !state.auto; 
-        e.target.innerText = state.auto ? "Auto Animation: ON" : "Auto Animation: OFF";
-    });
+        function calculateMOSUM(k, G) {
+            if (k < G || k > N - G) return 0;
+            let leftSum = 0, rightSum = 0;
+            for (let i = k - G; i < k; i++) leftSum += dataX[i];
+            for (let i = k; i < k + G; i++) rightSum += dataX[i];
+            return Math.abs(Math.sqrt(G / 2) * ((rightSum / G) - (leftSum / G)));
+        }
 
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+        function resetAnimation() {
+            const G = parseInt(document.getElementById('paramG').value);
+            currentIndex = G;
+            generateData();
+        }
 
-    animate();
+        function update() {
+            const G = parseInt(document.getElementById('paramG').value);
+            const noise = parseFloat(document.getElementById('paramNoise').value);
+            const threshold = parseFloat(document.getElementById('paramThresh').value);
+            const speed = parseInt(document.getElementById('paramSpeed').value);
+            const eta = parseFloat(document.getElementById('paramEta').value);
+            const eps = parseFloat(document.getElementById('paramEps').value);
 
-</script>
+            document.getElementById('gVal').innerText = G;
+            document.getElementById('noiseVal').innerText = noise.toFixed(1);
+            document.getElementById('threshVal').innerText = threshold.toFixed(1);
+            document.getElementById('etaVal').innerText = eta.toFixed(1);
+            document.getElementById('epsVal').innerText = eps.toFixed(1);
+            document.getElementById('speedVal').innerText = speed + 'x';
+
+            for (let i = G; i < N - G; i++) mosumCurve[i] = calculateMOSUM(i, G);
+
+            document.querySelectorAll('.current-row').forEach(el => el.classList.remove('current-row'));
+            const currentRow = document.getElementById(`row-${currentIndex}`);
+            if (currentRow) {
+                currentRow.classList.add('current-row');
+                currentRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+
+            const traces = [
+                { x: Array.from({length: N}, (_, i) => i), y: dataX, mode: 'lines', name: 'Raw Data', line: {color: '#bdc3c7', width: 1}, xaxis: 'x', yaxis: 'y' },
+                { x: [currentIndex - G, currentIndex], y: [dataX[currentIndex-G], dataX[currentIndex]], mode: 'none', fill: 'tozeroy', fillcolor: 'rgba(231, 76, 60, 0.3)', name: 'Left', xaxis: 'x', yaxis: 'y' },
+                { x: [currentIndex, currentIndex + G], y: [dataX[currentIndex], dataX[currentIndex+G]], mode: 'none', fill: 'tozeroy', fillcolor: 'rgba(52, 152, 219, 0.3)', name: 'Right', xaxis: 'x', yaxis: 'y' },
+                
+                { x: Array.from({length: N}, (_, i) => i), y: mosumCurve, mode: 'lines', name: 'MOSUM', line: {color: '#2c3e50', width: 2}, xaxis: 'x', yaxis: 'y2' },
+                { x: [0, N], y: [threshold, threshold], mode: 'lines', line: {dash: 'dash', color: '#e74c3c'}, name: 'Threshold', xaxis: 'x', yaxis: 'y2' },
+                { x: [currentIndex], y: [mosumCurve[currentIndex]], mode: 'markers', marker: {size: 12, color: '#f1c40f', symbol: 'diamond'}, xaxis: 'x', yaxis: 'y2' }
+            ];
+
+            const layout = {
+                showlegend: false,
+                grid: {rows: 2, columns: 1, pattern: 'independent'},
+                xaxis: {title: 'Time index (k)', gridcolor: '#eee'},
+                yaxis: {title: 'Signal Amplitude', range: [-5, 5]},
+                yaxis2: {title: 'Detector |T_G(k)|', range: [0, 8], gridcolor: '#eee'},
+                margin: {t: 20, b: 40, l: 60, r: 20},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.react('plot', traces, layout);
+
+            currentIndex += speed;
+            if (currentIndex >= N - G) currentIndex = G;
+            
+            setTimeout(() => requestAnimationFrame(update), 60);
+        }
+
+        generateData();
+        update();
+    </script>
 </body>
 </html>
