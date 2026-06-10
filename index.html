@@ -1,213 +1,1123 @@
-<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOSUM Interactive Simulation - Pro Version</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f0f2f5; color: #1a1a1b; }
-        .main-container { display: flex; gap: 20px; max-width: 1400px; margin: auto; }
-        .left-panel { flex: 3; }
-        .right-panel { flex: 1; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; }
-        
-        /* 调整网格以容纳更多控件 */
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .control-group { display: flex; flex-direction: column; }
-        label { font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #444; }
-        
-        #plot { height: 600px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        
-        #dataWindow { flex-grow: 1; font-family: 'Courier New', Courier, monospace; font-size: 12px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fafafa; border-radius: 4px; max-height: 500px; }
-        .data-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #eee; }
-        .current-row { background: #fff3cd; font-weight: bold; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        .greek-math { font-family: "Times New Roman", Times, serif; font-style: italic; font-size: 1.1em; }
-        .footer-note { margin-top: 20px; padding: 15px; background: #e9ecef; border-left: 5px solid #007bff; font-size: 0.95em; line-height: 1.6; }
-    </style>
+  <title>Physics & Philosophy</title>
+  <meta
+    name="description"
+    content="Physics & Philosophy is an open academic project for theoretical physics and philosophy, focused on foundational physics, ontology, scientific realism, quantum foundations, dark matter theory, and formal models."
+  />
+
+  <style>
+    :root {
+      --bg: #f7f3ea;
+      --paper: #fffdf8;
+      --ink: #1f2328;
+      --muted: #646b73;
+      --line: #d8d0c2;
+      --accent: #223a5e;
+      --accent-soft: #edf1f7;
+      --bronze: #8a6f45;
+      --code-bg: #f1eee8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(34, 58, 94, 0.35);
+    }
+
+    a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .site {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: rgba(247, 243, 234, 0.96);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 0;
+      gap: 24px;
+    }
+
+    .brand {
+      font-size: 1.05rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--ink);
+      border-bottom: none;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 18px;
+      padding: 0;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    nav a {
+      border-bottom: none;
+      color: var(--muted);
+    }
+
+    nav a:hover {
+      color: var(--ink);
+    }
+
+    .hero {
+      padding: 72px 0 58px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 0.75fr;
+      gap: 56px;
+      align-items: start;
+    }
+
+    .kicker {
+      color: var(--bronze);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      font-family: Arial, sans-serif;
+      margin-bottom: 18px;
+    }
+
+    h1, h2, h3, h4 {
+      line-height: 1.2;
+      font-weight: 500;
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.6rem, 6vw, 5.7rem);
+      letter-spacing: -0.055em;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: clamp(1.9rem, 3vw, 3rem);
+      letter-spacing: -0.035em;
+      margin-bottom: 18px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .lead {
+      font-size: 1.22rem;
+      max-width: 760px;
+      color: #30363d;
+    }
+
+    .hero-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 34px;
+      max-width: 760px;
+    }
+
+    .hero-keywords span {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 248, 0.72);
+      color: var(--accent);
+      padding: 7px 11px;
+      font-size: 0.82rem;
+      font-family: Arial, sans-serif;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      padding: 28px;
+      box-shadow: 0 18px 40px rgba(31, 35, 40, 0.06);
+    }
+
+    .hero-card h3 {
+      color: var(--accent);
+    }
+
+    .meta-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 0.96rem;
+    }
+
+    .meta-list li {
+      border-top: 1px solid var(--line);
+      padding: 12px 0;
+    }
+
+    .meta-list li:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    section {
+      padding: 72px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-intro {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 34px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      padding: 24px;
+      min-height: 100%;
+    }
+
+    .card h3 {
+      color: var(--accent);
+    }
+
+    .card p,
+    .card li {
+      color: #3e454d;
+    }
+
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 3px 9px;
+      margin: 4px 5px 4px 0;
+      font-size: 0.78rem;
+      font-family: Arial, sans-serif;
+      border-radius: 999px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--accent);
+      font-family: Arial, sans-serif;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: #faf7f1;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .note {
+      background: #fbf8f1;
+      border-left: 4px solid var(--bronze);
+      padding: 18px 22px;
+      color: #3e454d;
+      margin: 28px 0;
+    }
+
+    code,
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      padding: 18px;
+      overflow-x: auto;
+      font-size: 0.88rem;
+    }
+
+    .bibliography li {
+      margin-bottom: 10px;
+    }
+
+    .small {
+      font-size: 0.91rem;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 44px 0 60px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid,
+      .grid,
+      .grid.two {
+        grid-template-columns: 1fr;
+      }
+
+      nav ul {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 56px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-
-    <h2 style="text-align: center;">MOSUM Change-Point Detection Simulator</h2>
-    
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="controls">
-                <div class="control-group">
-                    <label>Bandwidth (<span class="greek-math">G</span>): <span id="gVal">40</span></label>
-                    <input type="range" id="paramG" min="10" max="100" value="40">
-                </div>
-                <div class="control-group">
-                    <label>Noise Level (<span class="greek-math">&sigma;</span>): <span id="noiseVal">1.0</span></label>
-                    <input type="range" id="paramNoise" min="0.1" max="3" step="0.1" value="1.0">
-                </div>
-                <div class="control-group">
-                    <label>Threshold (<span class="greek-math">&tau;</span>): <span id="threshVal">3.5</span></label>
-                    <input type="range" id="paramThresh" min="1" max="10" step="0.1" value="3.5">
-                </div>
-                <div class="control-group">
-                    <label><span class="greek-math">&eta;</span>-Criterion: <span id="etaVal">0.4</span></label>
-                    <input type="range" id="paramEta" min="0" max="1" step="0.1" value="0.4">
-                </div>
-                <div class="control-group">
-                    <label><span class="greek-math">&epsilon;</span>-Criterion: <span id="epsVal">0.2</span></label>
-                    <input type="range" id="paramEps" min="0" max="1" step="0.1" value="0.2">
-                </div>
-                <div class="control-group">
-                    <label>Speed: <span id="speedVal">1x</span></label>
-                    <input type="range" id="paramSpeed" min="1" max="5" value="1">
-                </div>
-                <button onclick="resetAnimation()" style="grid-column: span 3; padding: 12px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold;">Reset Simulation Data</button>
-            </div>
-
-            <div id="plot"></div>
-        </div>
-
-        <div class="right-panel">
-            <label>Raw Data Stream (<span class="greek-math">X<sub>t</sub></span>)</label>
-            <div id="dataWindow"></div>
-            <p style="font-size: 11px; color: #777; margin-top: 10px;">Window lists: Index | Value</p>
-        </div>
+  <header>
+    <div class="site nav">
+      <a class="brand" href="#">Physics & Philosophy</a>
+      <nav aria-label="Main navigation">
+        <ul>
+          <li><a href="#mission">Mission</a></li>
+          <li><a href="#quantum">Quantum Measurement</a></li>
+          <li><a href="#dark-matter">Dark Matter</a></li>
+          <li><a href="#ontology">Ontology</a></li>
+          <li><a href="#models">Models & Code</a></li>
+          <li><a href="#contributions">Original Work</a></li>
+        </ul>
+      </nav>
     </div>
+  </header>
 
-<style>
-    .footer-note {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-left: 4px solid #005a9c;
-        font-size: 14px;
-    }
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="site hero-grid">
+        <div>
+          <div class="kicker">Theoretical Physics · Foundations of Physics · Scientific Realism</div>
+          <h1>Physics & Philosophy</h1>
 
-    .greek-math {
-        font-family: "Cambria Math", "Times New Roman", serif;
-        font-style: italic;
-        font-weight: bold;
-        color: #d32f2f; /* Distinct color for variables */
-    }
+          <p class="lead">
+            Foundational physics, ontology, and scientific realism.
+          </p>
 
-    .concept-highlight {
-        color: #005a9c;
-        font-weight: 500;
-    }
-</style>
+          <p>
+            An open academic project for theoretical physics and philosophy, focusing on quantum
+            foundations, dark matter theory, ontology, scientific realism, and formal models.
+          </p>
 
-<div class="footer-note">
-    <span class="concept-highlight"><strong>Mathematical Logic:</strong></span> 
-    The detector <span class="greek-math">|T<sub>G</sub>(k)|</span> is calculated by the normalized difference of the right and left window means. 
-    
-    <span class="concept-highlight">The stability</span> is governed by the 
-    <span class="greek-math">&eta;</span>-criterion (local dominance to avoid redundant detections) and 
-    <span class="greek-math">&epsilon;</span>-criterion (minimum duration to filter short noise spikes), 
-    
-    <span class="concept-highlight">ensuring</span> that 
-    <span class="greek-math">&sigma;</span> fluctuations do not trigger false positives.
-</div>
+          <div class="hero-keywords" aria-label="Research axes">
+            <span>Quantum Measurement</span>
+            <span>Dark Matter</span>
+            <span>Ontology</span>
+            <span>Scientific Realism</span>
+            <span>Formal Models</span>
+            <span>Comparative Metaphysics</span>
+          </div>
+        </div>
 
+        <aside class="hero-card">
+          <h3>Scope</h3>
+          <ul class="meta-list">
+            <li>Quantum measurement and interpretations of quantum mechanics</li>
+            <li>Dark matter theory, observational evidence, and model comparison</li>
+            <li>Ontology, scientific realism, and metaphysical method</li>
+            <li>Mathematical models, simulation code, and technical notes</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
 
-    <script>
-        const N = 500;
-        const jumpLoc = 250;
-        let currentIndex = 40;
-        let dataX = [];
-        let mosumCurve = Array(N).fill(null);
+    <!-- MISSION AND SCOPE -->
+    <section id="mission">
+      <div class="site">
+        <h2>Mission</h2>
 
-        function generateData() {
-            const noise = parseFloat(document.getElementById('paramNoise').value);
-            dataX = [];
-            for (let i = 0; i < N; i++) {
-                const mu = (i < jumpLoc) ? 0 : 1; // 增加跳跃幅度以使波峰更明显
-                const u1 = Math.random();
-                const u2 = Math.random();
-                const randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
-                dataX.push(parseFloat((mu + randStdNormal * noise).toFixed(3)));
-            }
-            updateDataWindow();
-        }
+        <p class="section-intro">
+          To examine foundational problems through formal theory and philosophical analysis.
+        </p>
 
-        function updateDataWindow() {
-            const container = document.getElementById('dataWindow');
-            container.innerHTML = dataX.map((val, i) => `
-                <div class="data-row" id="row-${i}">
-                    <span>t = ${i}</span>
-                    <span>${val}</span>
-                </div>
-            `).join('');
-        }
+        <p>
+          Physics & Philosophy is an open academic project devoted to foundational problems in
+          theoretical physics, ontology, and scientific realism. It approaches these problems through
+          rigorous scientific reasoning, formal theory, mathematical modeling, historical analysis,
+          and critical philosophical interpretation.
+        </p>
 
-        function calculateMOSUM(k, G) {
-            if (k < G || k > N - G) return 0;
-            let leftSum = 0, rightSum = 0;
-            for (let i = k - G; i < k; i++) leftSum += dataX[i];
-            for (let i = k; i < k + G; i++) rightSum += dataX[i];
-            return Math.abs(Math.sqrt(G / 2) * ((rightSum / G) - (leftSum / G)));
-        }
+        <p>
+          The project addresses philosophical questions sharpened by modern physics, especially by
+          the Copenhagen interpretation, the measurement problem, and the continuing debate over
+          realism.
+        </p>
 
-        function resetAnimation() {
-            const G = parseInt(document.getElementById('paramG').value);
-            currentIndex = G;
-            generateData();
-        }
+        <p>
+          It welcomes contributions and critical discussion from theoretical physicists, philosophers
+          of science, independent scholars, and academic associations. Its aim is to support
+          disciplined academic exchange through arguments, models, references, simulations, and
+          theoretical proposals.
+        </p>
 
-        function update() {
-            const G = parseInt(document.getElementById('paramG').value);
-            const noise = parseFloat(document.getElementById('paramNoise').value);
-            const threshold = parseFloat(document.getElementById('paramThresh').value);
-            const speed = parseInt(document.getElementById('paramSpeed').value);
-            const eta = parseFloat(document.getElementById('paramEta').value);
-            const eps = parseFloat(document.getElementById('paramEps').value);
+        <div class="grid" style="margin-top: 36px;">
+          <div class="card">
+            <h3>Foundational Physics</h3>
+            <p>
+              Quantum measurement, interpretations of quantum mechanics, dark matter theory, and the
+              conceptual structure of modern physics.
+            </p>
+          </div>
 
-            document.getElementById('gVal').innerText = G;
-            document.getElementById('noiseVal').innerText = noise.toFixed(1);
-            document.getElementById('threshVal').innerText = threshold.toFixed(1);
-            document.getElementById('etaVal').innerText = eta.toFixed(1);
-            document.getElementById('epsVal').innerText = eps.toFixed(1);
-            document.getElementById('speedVal').innerText = speed + 'x';
+          <div class="card">
+            <h3>Ontology and Realism</h3>
+            <p>
+              Scientific realism, structural realism, ontology, metaphysical method, and the status
+              of theoretical entities.
+            </p>
+          </div>
 
-            for (let i = G; i < N - G; i++) mosumCurve[i] = calculateMOSUM(i, G);
+          <div class="card">
+            <h3>Formal Models and Scholarly Exchange</h3>
+            <p>
+              Mathematical models, simulation code, annotated literature, technical notes, and
+              academic discussion among researchers, philosophers of science, and independent
+              scholars.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            document.querySelectorAll('.current-row').forEach(el => el.classList.remove('current-row'));
-            const currentRow = document.getElementById(`row-${currentIndex}`);
-            if (currentRow) {
-                currentRow.classList.add('current-row');
-                currentRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
+    <!-- QUANTUM -->
+    <section id="quantum">
+      <div class="site">
+        <h2>Quantum Measurement and Interpretations</h2>
+        <p class="section-intro">
+          This section surveys the measurement problem, the status of the wave function, the
+          emergence of classicality, and major interpretive frameworks in quantum theory.
+        </p>
 
-            const traces = [
-                { x: Array.from({length: N}, (_, i) => i), y: dataX, mode: 'lines', name: 'Raw Data', line: {color: '#bdc3c7', width: 1}, xaxis: 'x', yaxis: 'y' },
-                { x: [currentIndex - G, currentIndex], y: [dataX[currentIndex-G], dataX[currentIndex]], mode: 'none', fill: 'tozeroy', fillcolor: 'rgba(231, 76, 60, 0.3)', name: 'Left', xaxis: 'x', yaxis: 'y' },
-                { x: [currentIndex, currentIndex + G], y: [dataX[currentIndex], dataX[currentIndex+G]], mode: 'none', fill: 'tozeroy', fillcolor: 'rgba(52, 152, 219, 0.3)', name: 'Right', xaxis: 'x', yaxis: 'y' },
-                
-                { x: Array.from({length: N}, (_, i) => i), y: mosumCurve, mode: 'lines', name: 'MOSUM', line: {color: '#2c3e50', width: 2}, xaxis: 'x', yaxis: 'y2' },
-                { x: [0, N], y: [threshold, threshold], mode: 'lines', line: {dash: 'dash', color: '#e74c3c'}, name: 'Threshold', xaxis: 'x', yaxis: 'y2' },
-                { x: [currentIndex], y: [mosumCurve[currentIndex]], mode: 'markers', marker: {size: 12, color: '#f1c40f', symbol: 'diamond'}, xaxis: 'x', yaxis: 'y2' }
-            ];
+        <div class="note">
+          <strong>Core problem.</strong> The measurement problem arises from the tension between
+          unitary Schrödinger evolution, definite experimental outcomes, and the apparent classical
+          behavior of measuring devices.
+        </div>
 
-            const layout = {
-                showlegend: false,
-                grid: {rows: 2, columns: 1, pattern: 'independent'},
-                xaxis: {title: 'Time index (k)', gridcolor: '#eee'},
-                yaxis: {title: 'Signal Amplitude', range: [-5, 5]},
-                yaxis2: {title: 'Detector |T_G(k)|', range: [0, 8], gridcolor: '#eee'},
-                margin: {t: 20, b: 40, l: 60, r: 20},
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)'
-            };
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Interpretation</th>
+                <th>Central Idea</th>
+                <th>Representative Literature</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Copenhagen / Orthodox Views</td>
+                <td>
+                  Measurement is treated as a primitive or classical intervention; the formalism
+                  predicts outcomes without requiring a fully realist account of the wave function.
+                </td>
+                <td>Bohr; Heisenberg; von Neumann</td>
+              </tr>
+              <tr>
+                <td>Many-Worlds / Everettian Quantum Mechanics</td>
+                <td>
+                  The universal wave function evolves unitarily; apparent collapse is replaced by
+                  branching structure and relative states.
+                </td>
+                <td>Everett 1957; DeWitt; Wallace</td>
+              </tr>
+              <tr>
+                <td>de Broglie–Bohm Theory</td>
+                <td>
+                  Particles have definite positions guided by the wave function; measurement outcomes
+                  reflect hidden-variable dynamics.
+                </td>
+                <td>de Broglie; Bohm 1952; Bell</td>
+              </tr>
+              <tr>
+                <td>Objective Collapse Models</td>
+                <td>
+                  Collapse is a real physical process modifying standard unitary dynamics.
+                </td>
+                <td>GRW; Pearle; Ghirardi, Rimini, Weber</td>
+              </tr>
+              <tr>
+                <td>Decoherence-Based Accounts</td>
+                <td>
+                  Environmental entanglement suppresses interference between macroscopic alternatives,
+                  explaining effective classicality.
+                </td>
+                <td>Zeh; Zurek; Joos; Schlosshauer</td>
+              </tr>
+              <tr>
+                <td>Consistent Histories</td>
+                <td>
+                  Quantum systems are described by decoherent sets of histories rather than single
+                  measurement events.
+                </td>
+                <td>Griffiths; Omnès; Gell-Mann and Hartle</td>
+              </tr>
+              <tr>
+                <td>Relational Quantum Mechanics</td>
+                <td>
+                  Quantum states are relative to physical systems; properties are not absolute but
+                  relational.
+                </td>
+                <td>Rovelli</td>
+              </tr>
+              <tr>
+                <td>QBism</td>
+                <td>
+                  The quantum state represents an agent’s personal degrees of belief about future
+                  experiences.
+                </td>
+                <td>Fuchs; Schack; Mermin</td>
+              </tr>
+              <tr>
+                <td>Modal Interpretations</td>
+                <td>
+                  Quantum systems possess definite-valued properties selected by the structure of the
+                  state and dynamics.
+                </td>
+                <td>van Fraassen; Dieks; Vermaas</td>
+              </tr>
+              <tr>
+                <td>Transactional Interpretation</td>
+                <td>
+                  Quantum processes involve advanced and retarded waves forming transactions between
+                  emitters and absorbers.
+                </td>
+                <td>Cramer; Kastner</td>
+              </tr>
+              <tr>
+                <td>Information-Theoretic Approaches</td>
+                <td>
+                  Quantum theory is reconstructed from constraints on information, probability, and
+                  communication.
+                </td>
+                <td>Wheeler; Zeilinger; Clifton, Bub, Halvorson</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-            Plotly.react('plot', traces, layout);
+        <h3 style="margin-top: 36px;">Key Questions</h3>
+        <div>
+          <span class="tag">collapse</span>
+          <span class="tag">unitarity</span>
+          <span class="tag">definite outcomes</span>
+          <span class="tag">decoherence</span>
+          <span class="tag">Born rule</span>
+          <span class="tag">macroscopicity</span>
+          <span class="tag">observer-system relation</span>
+        </div>
+      </div>
+    </section>
 
-            currentIndex += speed;
-            if (currentIndex >= N - G) currentIndex = G;
-            
-            setTimeout(() => requestAnimationFrame(update), 60);
-        }
+    <!-- DARK MATTER -->
+    <section id="dark-matter">
+      <div class="site">
+        <h2>Dark Matter: Theory and Observation</h2>
+        <p class="section-intro">
+          This section summarizes the empirical motivations for dark matter, the major candidate
+          classes, and the observational and experimental programs used to constrain them.
+        </p>
 
-        generateData();
-        update();
-    </script>
+        <div class="grid two">
+          <div class="card">
+            <h3>Observational Evidence</h3>
+            <ul>
+              <li>Galaxy rotation curves</li>
+              <li>Galaxy cluster dynamics</li>
+              <li>Gravitational lensing</li>
+              <li>Cosmic microwave background anisotropies</li>
+              <li>Large-scale structure formation</li>
+              <li>Bullet Cluster and cluster merger systems</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Candidate Frameworks</h3>
+            <ul>
+              <li>Cold dark matter and ΛCDM</li>
+              <li>Weakly interacting massive particles</li>
+              <li>Axions and axion-like particles</li>
+              <li>Sterile neutrinos</li>
+              <li>Self-interacting dark matter</li>
+              <li>Fuzzy or ultralight dark matter</li>
+              <li>Primordial black holes</li>
+              <li>Modified gravity and MOND-like alternatives</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top: 28px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Program</th>
+                <th>Purpose</th>
+                <th>Examples</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Direct Detection</td>
+                <td>
+                  Search for scattering between dark matter particles and detector nuclei or
+                  electrons.
+                </td>
+                <td>XENON, LUX-ZEPLIN, PandaX, SuperCDMS</td>
+              </tr>
+              <tr>
+                <td>Indirect Detection</td>
+                <td>
+                  Search for annihilation or decay products such as gamma rays, neutrinos, or cosmic
+                  rays.
+                </td>
+                <td>Fermi-LAT, AMS-02, H.E.S.S., IceCube</td>
+              </tr>
+              <tr>
+                <td>Collider Searches</td>
+                <td>
+                  Look for missing energy or mediator signatures in high-energy collisions.
+                </td>
+                <td>LHC, ATLAS, CMS</td>
+              </tr>
+              <tr>
+                <td>Astrophysical Constraints</td>
+                <td>
+                  Use structure formation, lensing, dwarf galaxies, and cluster dynamics to constrain
+                  models.
+                </td>
+                <td>CMB, weak lensing, Lyman-alpha forest, galaxy surveys</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ONTOLOGY -->
+    <section id="ontology">
+      <div class="site">
+        <h2>Ontology and Realism</h2>
+        <p class="section-intro">
+          Ontology concerns what exists, what kinds of entities physical theories commit us to, and
+          how theoretical structure should be interpreted. Realism concerns whether successful
+          theories approximately describe a mind-independent world.
+        </p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Scientific Realism</h3>
+            <p>
+              The view that mature, successful scientific theories provide approximately true
+              descriptions of unobservable entities and structures.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Structural Realism</h3>
+            <p>
+              The view that science primarily captures relational or mathematical structure rather
+              than the intrinsic nature of objects.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Instrumentalism</h3>
+            <p>
+              The view that theories are tools for prediction and organization, not necessarily
+              descriptions of underlying reality.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Entity Realism</h3>
+            <p>
+              The view that experimental manipulation can justify belief in certain entities even
+              when broader theoretical frameworks remain provisional.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Ontic Structural Realism</h3>
+            <p>
+              The stronger view that structure is not merely epistemic but ontologically primary.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Process Ontology</h3>
+            <p>
+              The view that processes, events, relations, or becoming are more fundamental than
+              enduring substances.
+            </p>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 36px;">Criteria for Ontological Assessment</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Criterion</th>
+                <th>Question</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Explanatory Power</td>
+                <td>
+                  Does the ontology explain why the formalism works, rather than merely restating it?
+                </td>
+              </tr>
+              <tr>
+                <td>Empirical Adequacy</td>
+                <td>
+                  Is the ontology compatible with known observations and experimental constraints?
+                </td>
+              </tr>
+              <tr>
+                <td>Formal Coherence</td>
+                <td>
+                  Can the ontology be expressed without contradiction in a stable formal framework?
+                </td>
+              </tr>
+              <tr>
+                <td>Parsimony</td>
+                <td>
+                  Does it avoid unnecessary entities, mechanisms, or metaphysical excess?
+                </td>
+              </tr>
+              <tr>
+                <td>Continuity with Physics</td>
+                <td>
+                  Does it respect the mathematical structure and empirical discipline of physical
+                  theory?
+                </td>
+              </tr>
+              <tr>
+                <td>Interpretive Fruitfulness</td>
+                <td>
+                  Does it generate new distinctions, predictions, models, or research questions?
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODELS -->
+    <section id="models">
+      <div class="site">
+        <h2>Models, Code, and Reproducible Results</h2>
+        <p class="section-intro">
+          This section will host simulation code, notebooks, parameter studies, and figures for
+          quantum measurement models and dark matter models.
+        </p>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Quantum Measurement Models</h3>
+            <p>
+              Planned materials include unitary system-apparatus-environment simulations,
+              decoherence models, pointer-state dynamics, Born-rule tests, and comparisons across
+              interpretive assumptions.
+            </p>
+            <pre><code>repositories/
+  quantum-measurement/
+    notebooks/
+    src/
+    figures/
+    results/
+    README.md</code></pre>
+          </div>
+
+          <div class="card">
+            <h3>Dark Matter Models</h3>
+            <p>
+              Planned materials include rotation-curve fitting, halo profiles, modified-gravity
+              comparisons, cosmological parameter notebooks, and candidate-specific constraints.
+            </p>
+            <pre><code>repositories/
+  dark-matter/
+    halo-models/
+    observations/
+    simulations/
+    figures/
+    README.md</code></pre>
+          </div>
+        </div>
+
+        <div class="note">
+          Code should be released with clear versioning, input data descriptions, reproducibility
+          instructions, and explicit distinction between established models and speculative models.
+        </div>
+      </div>
+    </section>
+
+    <!-- ORIGINAL CONTRIBUTIONS -->
+    <section id="contributions">
+      <div class="site">
+        <h2>Original Contributions</h2>
+        <p class="section-intro">
+          The platform also presents original work. These proposals are framed as research
+          programmes and theoretical contributions, to be developed through technical manuscripts,
+          formal arguments, simulations, and peer review.
+        </p>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Unitary Quantum Measurement Theory</h3>
+            <p>
+              A proposed framework in which quantum measurement is treated within a fully unitary
+              dynamical structure, aiming to account for apparent outcome definiteness without
+              introducing a fundamental collapse postulate.
+            </p>
+            <p class="small">Status: manuscript / technical notes in preparation.</p>
+          </div>
+
+          <div class="card">
+            <h3>Manifestational Ontology</h3>
+            <p>
+              A philosophical framework in which entities, states, or structures are analyzed through
+              conditions of manifestation, relational presentation, and ontological dependence.
+            </p>
+            <p class="small">Status: conceptual framework / essay series in preparation.</p>
+          </div>
+
+          <div class="card">
+            <h3>Dark Matter Theory</h3>
+            <p>
+              A theoretical proposal addressing the nature, phenomenology, or effective behavior of
+              dark matter, to be compared with astrophysical observations and existing candidate
+              frameworks.
+            </p>
+            <p class="small">Status: model development / simulation programme.</p>
+          </div>
+
+          <div class="card">
+            <h3>Classical Reality Self-Consistency Theory</h3>
+            <p>
+              A proposed account of how classical reality may arise as a self-consistent structure
+              from underlying physical, observational, or manifestational constraints.
+            </p>
+            <p class="small">Status: theoretical framework / formalization in progress.</p>
+          </div>
+        </div>
+
+        <div class="note">
+          Suggested wording for publication pages: “The following works are original theoretical
+          proposals. They are presented for scholarly evaluation and will be revised in response to
+          technical criticism, peer review, and further formal development.”
+        </div>
+      </div>
+    </section>
+
+    <!-- METAPHYSICS -->
+    <section id="metaphysics">
+      <div class="site">
+        <h2>Metaphysics and Comparative Ontology</h2>
+        <p class="section-intro">
+          This section maps major metaphysical traditions relevant to ontology, causation, substance,
+          process, dependence, mind, and reality. The aim is comparative and analytic, not devotional
+          or doctrinal.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tradition / View</th>
+                <th>Central Concern</th>
+                <th>Relevance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Substance Ontology</td>
+                <td>What are enduring entities or substances?</td>
+                <td>
+                  Useful for comparing classical objects, fields, particles, and metaphysical
+                  persistence.
+                </td>
+              </tr>
+              <tr>
+                <td>Process Metaphysics</td>
+                <td>Are processes, events, or becoming more fundamental than substances?</td>
+                <td>
+                  Relevant to spacetime, quantum events, thermodynamics, and relational theories.
+                </td>
+              </tr>
+              <tr>
+                <td>Structuralism</td>
+                <td>Is structure more fundamental than objects?</td>
+                <td>
+                  Relevant to mathematical physics, symmetry, field theory, and structural realism.
+                </td>
+              </tr>
+              <tr>
+                <td>Dispositionalism</td>
+                <td>Are powers, tendencies, or capacities fundamental?</td>
+                <td>
+                  Relevant to laws of nature, causation, and modal structure.
+                </td>
+              </tr>
+              <tr>
+                <td>Humeanism</td>
+                <td>Are laws summaries of regularities rather than governing necessities?</td>
+                <td>
+                  Relevant to the metaphysics of laws and probability.
+                </td>
+              </tr>
+              <tr>
+                <td>Grounding and Dependence</td>
+                <td>What explains the existence or status of one thing in terms of another?</td>
+                <td>
+                  Relevant to emergence, reduction, and measurement outcomes.
+                </td>
+              </tr>
+              <tr>
+                <td>Madhyamaka</td>
+                <td>Emptiness, dependent origination, and the critique of intrinsic nature.</td>
+                <td>
+                  Relevant to relational ontology, anti-essentialism, and dependence structures.
+                </td>
+              </tr>
+              <tr>
+                <td>Yogācāra</td>
+                <td>Consciousness, representation, and the structure of experience.</td>
+                <td>
+                  Relevant to philosophy of mind, observation, and appearance-reality distinctions.
+                </td>
+              </tr>
+              <tr>
+                <td>Vedānta</td>
+                <td>Reality, self, consciousness, and ultimate ground.</td>
+                <td>
+                  Relevant to comparative metaphysics and theories of mind and being.
+                </td>
+              </tr>
+              <tr>
+                <td>Nyāya-Vaiśeṣika</td>
+                <td>Categories, substances, qualities, universals, and inference.</td>
+                <td>
+                  Relevant to analytic ontology, categories, and realism.
+                </td>
+              </tr>
+              <tr>
+                <td>Sāṃkhya</td>
+                <td>Dual principles, manifestation, causation, and evolution of categories.</td>
+                <td>
+                  Relevant to comparative accounts of manifestation and ontological structure.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- BIBLIOGRAPHY -->
+    <section id="bibliography">
+      <div class="site">
+        <h2>Selected Bibliography</h2>
+        <p class="section-intro">
+          A preliminary bibliography for foundational orientation. Full annotated bibliographies will
+          be developed for each topic.
+        </p>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Quantum Foundations</h3>
+            <ol class="bibliography">
+              <li>von Neumann, J. <em>Mathematical Foundations of Quantum Mechanics</em>.</li>
+              <li>Everett, H. “Relative State” Formulation of Quantum Mechanics, 1957.</li>
+              <li>
+                Bohm, D. A Suggested Interpretation of the Quantum Theory in Terms of Hidden
+                Variables, 1952.
+              </li>
+              <li>Bell, J. S. <em>Speakable and Unspeakable in Quantum Mechanics</em>.</li>
+              <li>
+                Ghirardi, G. C., Rimini, A., and Weber, T. Unified Dynamics for Microscopic and
+                Macroscopic Systems, 1986.
+              </li>
+              <li>
+                Zurek, W. H. Decoherence, Einselection, and the Quantum Origins of the Classical.
+              </li>
+              <li>
+                Schlosshauer, M. <em>Decoherence and the Quantum-to-Classical Transition</em>.
+              </li>
+              <li>Rovelli, C. Relational Quantum Mechanics.</li>
+              <li>Fuchs, C. A., Mermin, N. D., and Schack, R. An Introduction to QBism.</li>
+            </ol>
+          </div>
+
+          <div class="card">
+            <h3>Dark Matter and Cosmology</h3>
+            <ol class="bibliography">
+              <li>Zwicky, F. On the Masses of Nebulae and of Clusters of Nebulae.</li>
+              <li>Rubin, V. C. and Ford, W. K. Rotation of the Andromeda Nebula.</li>
+              <li>Jungman, G., Kamionkowski, M., and Griest, K. Supersymmetric Dark Matter.</li>
+              <li>
+                Bertone, G., Hooper, D., and Silk, J. Particle Dark Matter: Evidence, Candidates and
+                Constraints.
+              </li>
+              <li>Planck Collaboration. Cosmological Parameters.</li>
+              <li>Clowe, D. et al. A Direct Empirical Proof of the Existence of Dark Matter.</li>
+              <li>
+                Milgrom, M. A Modification of the Newtonian Dynamics as a Possible Alternative to
+                the Hidden Mass Hypothesis.
+              </li>
+              <li>Hui, L. et al. Ultralight Scalars as Cosmological Dark Matter.</li>
+            </ol>
+          </div>
+
+          <div class="card">
+            <h3>Ontology and Realism</h3>
+            <ol class="bibliography">
+              <li>Putnam, H. Mathematics, Matter and Method.</li>
+              <li>van Fraassen, B. C. <em>The Scientific Image</em>.</li>
+              <li>Hacking, I. <em>Representing and Intervening</em>.</li>
+              <li>Worrall, J. Structural Realism: The Best of Both Worlds?</li>
+              <li>Ladyman, J. What is Structural Realism?</li>
+              <li>Psillos, S. <em>Scientific Realism: How Science Tracks Truth</em>.</li>
+              <li>French, S. <em>The Structure of the World</em>.</li>
+            </ol>
+          </div>
+
+          <div class="card">
+            <h3>Comparative Metaphysics</h3>
+            <ol class="bibliography">
+              <li>Nāgārjuna. <em>Mūlamadhyamakakārikā</em>.</li>
+              <li>Vasubandhu. <em>Twenty Verses</em> and <em>Thirty Verses</em>.</li>
+              <li>Śaṅkara. Commentaries on the Upaniṣads and Brahma Sūtra.</li>
+              <li>Kaṇāda. <em>Vaiśeṣika Sūtra</em>.</li>
+              <li>Īśvarakṛṣṇa. <em>Sāṃkhyakārikā</em>.</li>
+              <li>Whitehead, A. N. <em>Process and Reality</em>.</li>
+              <li>Heil, J. <em>The Universe as We Find It</em>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="site">
+        <h2>Contact and Contribution</h2>
+        <p class="section-intro">
+          Researchers, philosophers of science, independent scholars, and academic associations
+          interested in foundations of physics, ontology, quantum theory, dark matter, or comparative
+          metaphysics are welcome to propose notes, bibliographies, code repositories, or
+          collaborative discussions.
+        </p>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Contact</h3>
+            <p>Email: <a href="mailto:zhou@physicsphilosophy.org">zhou@physicsphilosophy.org</a></p>
+            <p>Website: <a href="https://physicsphilosophy.org">physicsphilosophy.org</a></p>
+            <p>ORCID: <span class="small">add ORCID link here</span></p>
+          </div>
+
+          <div class="card">
+            <h3>Contribution Format</h3>
+            <p>
+              Suggested contributions include technical notes, annotated bibliographies, replication
+              notebooks, model comparisons, philosophical essays, and formal comments on manuscripts.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="site">
+      <p>
+        © <span id="year"></span> Physics & Philosophy. An open academic project for theoretical
+        physics and philosophy.
+      </p>
+      <p class="small">
+        Materials on this site are intended for scholarly discussion. Original proposals should be
+        evaluated through technical analysis, replication, criticism, and peer review.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
