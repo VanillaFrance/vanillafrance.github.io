@@ -68,18 +68,28 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 18px 0;
+      padding: 16px 0;
       gap: 24px;
     }
 
     .brand {
-      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.02rem;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       font-weight: 600;
       color: var(--ink);
       border-bottom: none;
       white-space: nowrap;
+    }
+
+    .brand-emblem {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      display: block;
     }
 
     nav ul {
@@ -102,7 +112,7 @@
     }
 
     .hero {
-      padding: 58px 0 58px;
+      padding: 72px 0 58px;
       border-bottom: 1px solid var(--line);
     }
 
@@ -111,17 +121,6 @@
       grid-template-columns: 1.45fr 0.75fr;
       gap: 56px;
       align-items: start;
-    }
-
-    .hero-logo-wrap {
-      margin-bottom: 26px;
-    }
-
-    .hero-logo {
-      display: block;
-      width: min(560px, 100%);
-      height: auto;
-      border: none;
     }
 
     .kicker {
@@ -327,6 +326,22 @@
       color: var(--muted);
     }
 
+    .logo-panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .full-logo {
+      width: min(520px, 100%);
+      height: auto;
+      display: block;
+      border: none;
+    }
+
     footer {
       padding: 44px 0 60px;
       color: var(--muted);
@@ -345,11 +360,12 @@
       }
 
       .hero {
-        padding-top: 42px;
+        padding-top: 56px;
       }
 
-      .hero-logo {
-        width: min(480px, 100%);
+      .brand-emblem {
+        width: 28px;
+        height: 28px;
       }
     }
   </style>
@@ -358,7 +374,11 @@
 <body>
   <header>
     <div class="site nav">
-      <a class="brand" href="#">Physics & Philosophy</a>
+      <a class="brand" href="#">
+        <img class="brand-emblem" src="assets/emblem.png" alt="" />
+        <span>Physics & Philosophy</span>
+      </a>
+
       <nav aria-label="Main navigation">
         <ul>
           <li><a href="#mission">Mission</a></li>
@@ -377,15 +397,9 @@
     <section class="hero">
       <div class="site hero-grid">
         <div>
-          <div class="hero-logo-wrap">
-            <img
-              class="hero-logo"
-              src="assets/logo.png"
-              alt="Physics & Philosophy logo"
-            />
-          </div>
-
           <div class="kicker">Theoretical Physics · Foundations of Physics · Scientific Realism</div>
+
+          <h1>Physics & Philosophy</h1>
 
           <p class="lead">
             Foundational physics, ontology, and scientific realism.
@@ -747,57 +761,6 @@
             </p>
           </div>
         </div>
-
-        <h3 style="margin-top: 36px;">Criteria for Ontological Assessment</h3>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Criterion</th>
-                <th>Question</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Explanatory Power</td>
-                <td>
-                  Does the ontology explain why the formalism works, rather than merely restating it?
-                </td>
-              </tr>
-              <tr>
-                <td>Empirical Adequacy</td>
-                <td>
-                  Is the ontology compatible with known observations and experimental constraints?
-                </td>
-              </tr>
-              <tr>
-                <td>Formal Coherence</td>
-                <td>
-                  Can the ontology be expressed without contradiction in a stable formal framework?
-                </td>
-              </tr>
-              <tr>
-                <td>Parsimony</td>
-                <td>
-                  Does it avoid unnecessary entities, mechanisms, or metaphysical excess?
-                </td>
-              </tr>
-              <tr>
-                <td>Continuity with Physics</td>
-                <td>
-                  Does it respect the mathematical structure and empirical discipline of physical
-                  theory?
-                </td>
-              </tr>
-              <tr>
-                <td>Interpretive Fruitfulness</td>
-                <td>
-                  Does it generate new distinctions, predictions, models, or research questions?
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </section>
 
@@ -899,200 +862,6 @@
             <p class="small">Status: theoretical framework / formalization in progress.</p>
           </div>
         </div>
-
-        <div class="note">
-          Suggested wording for publication pages: “The following works are original theoretical
-          proposals. They are presented for scholarly evaluation and will be revised in response to
-          technical criticism, peer review, and further formal development.”
-        </div>
-      </div>
-    </section>
-
-    <!-- METAPHYSICS -->
-    <section id="metaphysics">
-      <div class="site">
-        <h2>Metaphysics and Comparative Ontology</h2>
-        <p class="section-intro">
-          This section maps major metaphysical traditions relevant to ontology, causation, substance,
-          process, dependence, mind, and reality. The aim is comparative and analytic, not devotional
-          or doctrinal.
-        </p>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Tradition / View</th>
-                <th>Central Concern</th>
-                <th>Relevance</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Substance Ontology</td>
-                <td>What are enduring entities or substances?</td>
-                <td>
-                  Useful for comparing classical objects, fields, particles, and metaphysical
-                  persistence.
-                </td>
-              </tr>
-              <tr>
-                <td>Process Metaphysics</td>
-                <td>Are processes, events, or becoming more fundamental than substances?</td>
-                <td>
-                  Relevant to spacetime, quantum events, thermodynamics, and relational theories.
-                </td>
-              </tr>
-              <tr>
-                <td>Structuralism</td>
-                <td>Is structure more fundamental than objects?</td>
-                <td>
-                  Relevant to mathematical physics, symmetry, field theory, and structural realism.
-                </td>
-              </tr>
-              <tr>
-                <td>Dispositionalism</td>
-                <td>Are powers, tendencies, or capacities fundamental?</td>
-                <td>
-                  Relevant to laws of nature, causation, and modal structure.
-                </td>
-              </tr>
-              <tr>
-                <td>Humeanism</td>
-                <td>Are laws summaries of regularities rather than governing necessities?</td>
-                <td>
-                  Relevant to the metaphysics of laws and probability.
-                </td>
-              </tr>
-              <tr>
-                <td>Grounding and Dependence</td>
-                <td>What explains the existence or status of one thing in terms of another?</td>
-                <td>
-                  Relevant to emergence, reduction, and measurement outcomes.
-                </td>
-              </tr>
-              <tr>
-                <td>Madhyamaka</td>
-                <td>Emptiness, dependent origination, and the critique of intrinsic nature.</td>
-                <td>
-                  Relevant to relational ontology, anti-essentialism, and dependence structures.
-                </td>
-              </tr>
-              <tr>
-                <td>Yogācāra</td>
-                <td>Consciousness, representation, and the structure of experience.</td>
-                <td>
-                  Relevant to philosophy of mind, observation, and appearance-reality distinctions.
-                </td>
-              </tr>
-              <tr>
-                <td>Vedānta</td>
-                <td>Reality, self, consciousness, and ultimate ground.</td>
-                <td>
-                  Relevant to comparative metaphysics and theories of mind and being.
-                </td>
-              </tr>
-              <tr>
-                <td>Nyāya-Vaiśeṣika</td>
-                <td>Categories, substances, qualities, universals, and inference.</td>
-                <td>
-                  Relevant to analytic ontology, categories, and realism.
-                </td>
-              </tr>
-              <tr>
-                <td>Sāṃkhya</td>
-                <td>Dual principles, manifestation, causation, and evolution of categories.</td>
-                <td>
-                  Relevant to comparative accounts of manifestation and ontological structure.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- BIBLIOGRAPHY -->
-    <section id="bibliography">
-      <div class="site">
-        <h2>Selected Bibliography</h2>
-        <p class="section-intro">
-          A preliminary bibliography for foundational orientation. Full annotated bibliographies will
-          be developed for each topic.
-        </p>
-
-        <div class="grid two">
-          <div class="card">
-            <h3>Quantum Foundations</h3>
-            <ol class="bibliography">
-              <li>von Neumann, J. <em>Mathematical Foundations of Quantum Mechanics</em>.</li>
-              <li>Everett, H. “Relative State” Formulation of Quantum Mechanics, 1957.</li>
-              <li>
-                Bohm, D. A Suggested Interpretation of the Quantum Theory in Terms of Hidden
-                Variables, 1952.
-              </li>
-              <li>Bell, J. S. <em>Speakable and Unspeakable in Quantum Mechanics</em>.</li>
-              <li>
-                Ghirardi, G. C., Rimini, A., and Weber, T. Unified Dynamics for Microscopic and
-                Macroscopic Systems, 1986.
-              </li>
-              <li>
-                Zurek, W. H. Decoherence, Einselection, and the Quantum Origins of the Classical.
-              </li>
-              <li>
-                Schlosshauer, M. <em>Decoherence and the Quantum-to-Classical Transition</em>.
-              </li>
-              <li>Rovelli, C. Relational Quantum Mechanics.</li>
-              <li>Fuchs, C. A., Mermin, N. D., and Schack, R. An Introduction to QBism.</li>
-            </ol>
-          </div>
-
-          <div class="card">
-            <h3>Dark Matter and Cosmology</h3>
-            <ol class="bibliography">
-              <li>Zwicky, F. On the Masses of Nebulae and of Clusters of Nebulae.</li>
-              <li>Rubin, V. C. and Ford, W. K. Rotation of the Andromeda Nebula.</li>
-              <li>Jungman, G., Kamionkowski, M., and Griest, K. Supersymmetric Dark Matter.</li>
-              <li>
-                Bertone, G., Hooper, D., and Silk, J. Particle Dark Matter: Evidence, Candidates and
-                Constraints.
-              </li>
-              <li>Planck Collaboration. Cosmological Parameters.</li>
-              <li>Clowe, D. et al. A Direct Empirical Proof of the Existence of Dark Matter.</li>
-              <li>
-                Milgrom, M. A Modification of the Newtonian Dynamics as a Possible Alternative to
-                the Hidden Mass Hypothesis.
-              </li>
-              <li>Hui, L. et al. Ultralight Scalars as Cosmological Dark Matter.</li>
-            </ol>
-          </div>
-
-          <div class="card">
-            <h3>Ontology and Realism</h3>
-            <ol class="bibliography">
-              <li>Putnam, H. Mathematics, Matter and Method.</li>
-              <li>van Fraassen, B. C. <em>The Scientific Image</em>.</li>
-              <li>Hacking, I. <em>Representing and Intervening</em>.</li>
-              <li>Worrall, J. Structural Realism: The Best of Both Worlds?</li>
-              <li>Ladyman, J. What is Structural Realism?</li>
-              <li>Psillos, S. <em>Scientific Realism: How Science Tracks Truth</em>.</li>
-              <li>French, S. <em>The Structure of the World</em>.</li>
-            </ol>
-          </div>
-
-          <div class="card">
-            <h3>Comparative Metaphysics</h3>
-            <ol class="bibliography">
-              <li>Nāgārjuna. <em>Mūlamadhyamakakārikā</em>.</li>
-              <li>Vasubandhu. <em>Twenty Verses</em> and <em>Thirty Verses</em>.</li>
-              <li>Śaṅkara. Commentaries on the Upaniṣads and Brahma Sūtra.</li>
-              <li>Kaṇāda. <em>Vaiśeṣika Sūtra</em>.</li>
-              <li>Īśvarakṛṣṇa. <em>Sāṃkhyakārikā</em>.</li>
-              <li>Whitehead, A. N. <em>Process and Reality</em>.</li>
-              <li>Heil, J. <em>The Universe as We Find It</em>.</li>
-            </ol>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -1115,12 +884,8 @@
             <p>ORCID: <span class="small">add ORCID link here</span></p>
           </div>
 
-          <div class="card">
-            <h3>Contribution Format</h3>
-            <p>
-              Suggested contributions include technical notes, annotated bibliographies, replication
-              notebooks, model comparisons, philosophical essays, and formal comments on manuscripts.
-            </p>
+          <div class="logo-panel">
+            <img class="full-logo" src="assets/logo.png" alt="Physics & Philosophy full logo" />
           </div>
         </div>
       </div>
